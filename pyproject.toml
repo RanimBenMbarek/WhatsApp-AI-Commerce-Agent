@@ -1,0 +1,26 @@
+[project]
+name = "ai-agent"
+version = "0.1.0"
+description = "An AI-powered WhatsApp commerce agent"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.143.3",
+    "langchain>=1.4.6",
+    "langchain-openai>=1.7.2",
+    "openai>=3.14.1",
+    "pillow>=12.3.0",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.16.0",
+    "python-dotenv>=1.2.3",
+    "requests>=2.34.2",
+    "sqlalchemy>=2.1.5",
+    "supabase>=2.33.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
