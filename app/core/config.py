@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_role_key: str
     database_url: str
-    openai_api_key: str| None = None
+    openai_api_key: str
 
     model_config = SettingsConfigDict(
         env_file=".env",

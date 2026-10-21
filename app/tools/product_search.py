@@ -22,14 +22,34 @@ def create_product_search_tool(
         query: Annotated[
             str,
             Field(
-                min_length=1,
                 max_length=100,
+                description="Product name, brand, or description keywords.",
+            ),
+        ] = "",
+        color: Annotated[
+            str | None,
+            Field(
+                max_length=50,
+                description="Desired color, such as black or beige.",
+            ),
+        ] = None,
+        size: Annotated[
+            str | None,
+            Field(
+                max_length=30,
+                description="Desired size, such as S, M, L, or 38.",
+            ),
+        ] = None,
+        max_price: Annotated[
+            Decimal | None,
+            Field(
+                gt=0,
                 description=(
-                    "Keywords describing the products the customer wants, "
-                    "such as 'black dress' or 'handbag'."
+                    "Maximum catalog price in the catalog's price units. "
+                    "Do not assume a currency that has not been confirmed."
                 ),
             ),
-        ],
+        ] = None,
         limit: Annotated[
             int,
             Field(
@@ -39,37 +59,27 @@ def create_product_search_tool(
             ),
         ] = 5,
     ) -> str:
+        """Search active store products using text and optional variant filters.
+
+        Use this tool for product discovery. Color, size, and maximum price
+        filters are applied to active variants. Returned prices and stock
+        may be demo data; check their demo flags before describing them
+        as confirmed selling prices or live availability.
+        """
 
         with session_factory() as db:
             repository = ProductRepository(db)
             products = repository.search_active_products(
                 query=query,
                 limit=limit,
+                color=color,
+                size=size,
+                max_price=max_price,
             )
 
             results = []
 
             for product in products:
-                variants = []
-
-                for variant in product.variants:
-                    variants.append(
-                        {
-                            "sku": variant.sku,
-                            "size": variant.size,
-                            "color": variant.color,
-                            "attributes": variant.attributes,
-                            "price": str(variant.price),
-                            "price_is_demo": variant.price_is_demo,
-                            "stock_quantity": variant.stock_quantity,
-                            "stock_is_demo": variant.stock_is_demo,
-                            "images": [
-                                image.image_url
-                                for image in variant.images
-                            ],
-                        }
-                    )
-
                 results.append(
                     {
                         "id": str(product.id),
@@ -78,18 +88,30 @@ def create_product_search_tool(
                         "brand": product.brand,
                         "category_id": str(product.category_id),
                         "images": [
-                            image.image_url
-                            for image in product.images
+                            image.image_url for image in product.images
                         ],
-                        "variants": variants,
+                        "variants": [
+                            {
+                                "sku": variant.sku,
+                                "size": variant.size,
+                                "color": variant.color,
+                                "attributes": variant.attributes,
+                                "price": str(variant.price),
+                                "price_is_demo": variant.price_is_demo,
+                                "stock_quantity": variant.stock_quantity,
+                                "stock_is_demo": variant.stock_is_demo,
+                                "images": [
+                                    image.image_url
+                                    for image in variant.images
+                                ],
+                            }
+                            for variant in product.variants
+                        ],
                     }
                 )
 
         return json.dumps(
-            {
-                "count": len(results),
-                "products": results,
-            },
+            {"count": len(results), "products": results},
             ensure_ascii=False,
         )
 

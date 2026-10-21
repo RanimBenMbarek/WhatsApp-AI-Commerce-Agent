@@ -4,9 +4,16 @@ from app.models.product import Product
 from app.models.product_image import ProductImage
 from app.models.product_variant import ProductVariant
 
+from app.models.customer import Customer
+from app.models.cart import Cart
+from app.models.cart_item import CartItem
+
 __all__ = [
     "Category",
     "Product",
     "ProductImage",
     "ProductVariant",
+    "Customer",
+    "Cart",
+    "CartItem",
 ]
