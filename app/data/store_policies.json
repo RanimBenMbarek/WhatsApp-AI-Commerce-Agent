@@ -1,0 +1,56 @@
+
+{
+  "delivery": {
+    "status": "not_configured",
+    "answer": null,
+    "required_information": [
+      "delivery_areas",
+      "delivery_fees",
+      "estimated_delivery_time",
+      "tracking_availability",
+      "failed_delivery_procedure"
+    ]
+  },
+  "returns": {
+    "status": "not_configured",
+    "answer": null,
+    "required_information": [
+      "return_eligibility",
+      "return_window",
+      "item_condition_requirements",
+      "non_returnable_items",
+      "return_shipping_cost",
+      "return_process"
+    ]
+  },
+  "refunds": {
+    "status": "not_configured",
+    "answer": null,
+    "required_information": [
+      "refund_eligibility",
+      "refund_method",
+      "refund_processing_time",
+      "shipping_fee_refund_rules"
+    ]
+  },
+  "payments": {
+    "status": "not_configured",
+    "answer": null,
+    "required_information": [
+      "accepted_payment_methods",
+      "cash_on_delivery_availability",
+      "card_payment_availability",
+      "payment_confirmation_rules"
+    ]
+  },
+  "cancellations": {
+    "status": "not_configured",
+    "answer": null,
+    "required_information": [
+      "cancellation_deadline",
+      "cancellation_process",
+      "cancellation_after_dispatch",
+      "cancellation_fee"
+    ]
+  }
+}

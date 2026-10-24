@@ -7,6 +7,8 @@ from app.models.product_variant import ProductVariant
 from app.models.customer import Customer
 from app.models.cart import Cart
 from app.models.cart_item import CartItem
+from app.models.order import Order
+from app.models.order_item import OrderItem
 
 __all__ = [
     "Category",
@@ -16,4 +18,6 @@ __all__ = [
     "Customer",
     "Cart",
     "CartItem",
+    "Order",
+    "OrderItem",
 ]
