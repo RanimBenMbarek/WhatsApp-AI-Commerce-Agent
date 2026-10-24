@@ -1,32 +1,53 @@
+
+from uuid import UUID
+
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
 
 from app.agents.prompts import SYSTEM_PROMPT
 from app.core.config import get_settings
+from app.tools.cart_tools import create_cart_tools
+from app.tools.product_availability import create_product_availability_tool
 from app.tools.product_search import create_product_search_tool
 
 
-def create_commerce_agent()  :
-    """Create the fashion and beauty customer-service agent."""
-    
+def create_commerce_agent(
+    customer_id: UUID | None = None,
+    checkpointer=None,
+):
+    """Build the commerce agent.
+
+    Cart tools are added only when trusted application code supplies
+    a customer ID. Never obtain this ID from the LLM.
+    """
     settings = get_settings()
 
     if not settings.openai_api_key:
         raise ValueError(
             "OPENAI_API_KEY must be configured before creating the agent."
-    )
-    
+        )
 
     llm = ChatOpenAI(
-        model_name="gpt-4o-mini",
+        model="gpt-4o-mini",
+        api_key=settings.openai_api_key,
         temperature=0.0,
     )
-    product_search_tool = create_product_search_tool()
 
-    agent = create_agent(
-        model=llm, 
-        tools=[product_search_tool],
+    tools = [
+        create_product_search_tool(),
+        create_product_availability_tool(),
+    ]
+
+    if customer_id is not None:
+        tools.extend(create_cart_tools(customer_id=customer_id))
+
+    if checkpointer is None:
+        checkpointer = InMemorySaver()
+
+    return create_agent(
+        model=llm,
+        tools=tools,
         system_prompt=SYSTEM_PROMPT,
+        checkpointer=checkpointer,
     )
-
-    return agent

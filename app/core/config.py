@@ -14,7 +14,12 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_role_key: str
     database_url: str
-    openai_api_key: str| None = None
+    openai_api_key: str
+    
+    seller_name: str | None = None
+    seller_address: str | None = None
+    seller_contact: str | None = None
+    currency: str = "EUR"
 
     model_config = SettingsConfigDict(
         env_file=".env",

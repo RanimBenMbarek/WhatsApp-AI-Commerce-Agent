@@ -1,7 +1,8 @@
 
+from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import  and_, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import Product, ProductVariant
@@ -18,8 +19,39 @@ class ProductRepository:
         query: str = "",
         limit: int = 10,
         category_id: UUID | None = None,
+        color: str | None = None,
+        size: str | None = None,
+        max_price: Decimal | None = None,
     ) -> list[Product]:
-        """Search active products and load their related catalog data."""
+        """Search active products and optionally filter their variants."""
+
+        variant_conditions = [ProductVariant.is_active.is_(True)]
+
+        if color and color.strip():
+            color_pattern = (
+                color.strip()
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+            )
+            variant_conditions.append(
+                ProductVariant.color.ilike(
+                    f"%{color_pattern}%",
+                    escape="\\",
+                )
+            )
+
+        if size and size.strip():
+            variant_conditions.append(
+                ProductVariant.size.ilike(size.strip())
+            )
+
+        if max_price is not None:
+            variant_conditions.append(
+                ProductVariant.price <= max_price
+            )
+
+        matching_variants = and_(*variant_conditions)
 
         statement = (
             select(Product)
@@ -27,9 +59,7 @@ class ProductRepository:
             .order_by(Product.name.asc())
             .options(
                 selectinload(
-                    Product.variants.and_(
-                        ProductVariant.is_active.is_(True)
-                    )
+                    Product.variants.and_(matching_variants)
                 ).selectinload(ProductVariant.images),
                 selectinload(Product.images),
             )
@@ -59,8 +89,65 @@ class ProductRepository:
                 Product.category_id == category_id
             )
 
+        # If variant filters were provided, the product must have
+        # at least one active variant satisfying all of them.
+        has_variant_filters = any(
+            value is not None and (
+                not isinstance(value, str) or value.strip()
+            )
+            for value in (color, size, max_price)
+        )
+
+        if has_variant_filters:
+            statement = statement.where(
+                Product.variants.any(matching_variants)
+            )
+
         safe_limit = max(1, min(limit, 50))
         statement = statement.limit(safe_limit)
 
-        result = self.db.scalars(statement)
-        return list(result.all())
+        return list(self.db.scalars(statement).all())
+
+    def get_variants_by_conditions(
+        self,
+        product_id: UUID,
+        color: str | None = None,
+        size: str | None = None,
+    ) -> list[Product | None,list[ProductVariant]]:
+        """Retrieve an active product and its matching active variants."""
+
+        product= self.db.scalars(
+            select(Product).where(
+                Product.id == product_id,
+                Product.status == "active",
+            )
+        )
+
+        if product is None:
+            return None, []
+
+        conditions = [ProductVariant.product_id == product_id, ProductVariant.is_active.is_(True)]
+        
+        if color and color.strip():
+            conditions.append(
+                func.lower(ProductVariant.color) == color.strip().lower()
+            )
+
+        if size and size.strip():
+            conditions.append(
+                func.lower(ProductVariant.size) == size.strip().lower()
+            )
+
+        variants = list(
+            self.db.scalars(
+                select(ProductVariant)
+                .where(*conditions)
+                .order_by(
+                    ProductVariant.color,
+                    ProductVariant.size,
+                )
+            ).all()
+        )
+
+
+        return product, variants
