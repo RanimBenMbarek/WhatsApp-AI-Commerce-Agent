@@ -13,18 +13,18 @@ router = APIRouter(prefix="/agent", tags=["Agent"])
 
 DEV_CONVERSATION_ID = "internal-development-thread"
 
+
 @router.post("/chat", response_model=AgentChatResponse)
 async def chat_with_agent(
     payload: AgentChatRequest,
     request: Request,
 ) -> AgentChatResponse:
-    """Send a customer message to the commerce agent."""
+    """Development endpoint for testing the commerce agent."""
 
     agent = request.app.state.commerce_agent
-    config =build_agent_config(DEV_CONVERSATION_ID)
+    config = build_agent_config(DEV_CONVERSATION_ID)
 
     try:
-
         result = await run_in_threadpool(
             agent.invoke,
             {
@@ -34,10 +34,12 @@ async def chat_with_agent(
                         "content": payload.message,
                     }
                 ],
-            }, 
+            },
             config=config,
+            context={
+                "customer_id": None,
+            },
         )
-
 
         reply = result["messages"][-1].content
 

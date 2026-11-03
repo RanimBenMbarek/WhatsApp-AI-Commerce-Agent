@@ -26,6 +26,17 @@ def create_product_search_tool(
                 description="Product name, brand, or description keywords.",
             ),
         ] = "",
+        category_name: Annotated[
+            str | None,
+            Field(
+                max_length=100,
+                description=(
+                    "Product category name, such as Dresses, Shoes, "
+                    "Swimwear, or Accessories. Use only categories "
+                    "that exist in the store catalog."
+                ),
+            ),
+        ] = None,
         color: Annotated[
             str | None,
             Field(
@@ -59,12 +70,14 @@ def create_product_search_tool(
             ),
         ] = 5,
     ) -> str:
-        """Search active store products using text and optional variant filters.
+        """Search active store products using text and optional filters.
 
-        Use this tool for product discovery. Color, size, and maximum price
-        filters are applied to active variants. Returned prices and stock
-        may be demo data; check their demo flags before describing them
-        as confirmed selling prices or live availability.
+        Use category_name to restrict results to a product category.
+        Use color, size, and max_price to filter active variants.
+
+        Returned prices and stock may be demo data; check their demo
+        flags before describing them as confirmed selling prices
+        or live availability.
         """
 
         with session_factory() as db:
@@ -72,6 +85,7 @@ def create_product_search_tool(
             products = repository.search_active_products(
                 query=query,
                 limit=limit,
+                category_name=category_name,
                 color=color,
                 size=size,
                 max_price=max_price,

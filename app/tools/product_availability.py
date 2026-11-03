@@ -40,7 +40,7 @@ def create_product_availability_tool(
 
         with session_factory() as session:
             repository = ProductRepository(session)
-            product , variants = repository.get_product_with_variants(
+            product, variants = repository.get_variants_by_conditions(
                 product_id=product_id,
                 color=color,
                 size=size,
@@ -74,6 +74,6 @@ def create_product_availability_tool(
                         for variant in variants
                     ],
             }
-            return json.dumps(result, ensure_ascii=False)
+        return json.dumps(result, ensure_ascii=False)
         
-        return check_product_availability
+    return check_product_availability

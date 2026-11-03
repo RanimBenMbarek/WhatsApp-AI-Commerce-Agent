@@ -9,6 +9,8 @@ from app.models.cart import Cart
 from app.models.cart_item import CartItem
 from app.models.order import Order
 from app.models.order_item import OrderItem
+from app.models.conversation import Conversation
+from app.models.message import Message
 
 __all__ = [
     "Category",
@@ -20,4 +22,6 @@ __all__ = [
     "CartItem",
     "Order",
     "OrderItem",
+    "Conversation",
+    "Message",
 ]

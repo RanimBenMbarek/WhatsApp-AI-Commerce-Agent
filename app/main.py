@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.agents.commerce_agent import create_commerce_agent
 from app.api.router import api_router
+from langgraph.checkpoint.memory import InMemorySaver
+
 from app.core.config import get_settings
 
 
@@ -11,7 +13,13 @@ from app.core.config import get_settings
 async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.settings = settings
-    app.state.commerce_agent = create_commerce_agent()
+
+    checkpointer = InMemorySaver()
+    app.state.checkpointer = checkpointer
+
+    app.state.commerce_agent = create_commerce_agent(
+        checkpointer=checkpointer,
+    )
     yield
 
 

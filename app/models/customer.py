@@ -38,3 +38,7 @@ class Customer(Base):
         "Cart",
         back_populates="customer",
     )
+    conversations: Mapped[list["Conversation"]] = relationship(
+        "Conversation",
+        back_populates="customer",
+    )

@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
     database_url: str
     openai_api_key: str
+
+    whatsapp_access_token: str | None = None
+    whatsapp_phone_number_id: str | None = None
+    whatsapp_verify_token: str | None = None
+    meta_app_secret: str | None = None
     
     seller_name: str | None = None
     seller_address: str | None = None

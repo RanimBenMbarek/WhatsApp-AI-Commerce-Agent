@@ -5,6 +5,7 @@ from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
+from app.agents.context import CommerceAgentContext
 from app.agents.prompts import SYSTEM_PROMPT
 from app.core.config import get_settings
 from app.tools.cart_tools import create_cart_tools
@@ -13,7 +14,6 @@ from app.tools.product_search import create_product_search_tool
 
 
 def create_commerce_agent(
-    customer_id: UUID | None = None,
     checkpointer=None,
 ):
     """Build the commerce agent.
@@ -33,14 +33,11 @@ def create_commerce_agent(
         api_key=settings.openai_api_key,
         temperature=0.0,
     )
-
     tools = [
         create_product_search_tool(),
         create_product_availability_tool(),
+        *create_cart_tools(),
     ]
-
-    if customer_id is not None:
-        tools.extend(create_cart_tools(customer_id=customer_id))
 
     if checkpointer is None:
         checkpointer = InMemorySaver()
@@ -50,4 +47,5 @@ def create_commerce_agent(
         tools=tools,
         system_prompt=SYSTEM_PROMPT,
         checkpointer=checkpointer,
+        context_schema=CommerceAgentContext,
     )

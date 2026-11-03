@@ -4,8 +4,7 @@ from uuid import UUID
 
 from sqlalchemy import  and_, func, or_, select
 from sqlalchemy.orm import Session, selectinload
-
-from app.models import Product, ProductVariant
+from app.models import Category, Product, ProductVariant
 
 
 class ProductRepository:
@@ -19,6 +18,7 @@ class ProductRepository:
         query: str = "",
         limit: int = 10,
         category_id: UUID | None = None,
+        category_name: str | None = None,
         color: str | None = None,
         size: str | None = None,
         max_price: Decimal | None = None,
@@ -89,6 +89,13 @@ class ProductRepository:
                 Product.category_id == category_id
             )
 
+        if category_name and category_name.strip():
+            statement = statement.where(
+                Product.category.has(
+                    func.lower(Category.name) == category_name.strip().lower()
+                )
+            )
+
         # If variant filters were provided, the product must have
         # at least one active variant satisfying all of them.
         has_variant_filters = any(
@@ -113,21 +120,24 @@ class ProductRepository:
         product_id: UUID,
         color: str | None = None,
         size: str | None = None,
-    ) -> list[Product | None,list[ProductVariant]]:
+    ) -> tuple[Product | None, list[ProductVariant]]:
         """Retrieve an active product and its matching active variants."""
 
-        product= self.db.scalars(
+        product = self.db.scalars(
             select(Product).where(
                 Product.id == product_id,
                 Product.status == "active",
             )
-        )
+        ).first()
 
         if product is None:
             return None, []
 
-        conditions = [ProductVariant.product_id == product_id, ProductVariant.is_active.is_(True)]
-        
+        conditions = [
+            ProductVariant.product_id == product_id,
+            ProductVariant.is_active.is_(True),
+        ]
+
         if color and color.strip():
             conditions.append(
                 func.lower(ProductVariant.color) == color.strip().lower()
@@ -148,6 +158,5 @@ class ProductRepository:
                 )
             ).all()
         )
-
 
         return product, variants
